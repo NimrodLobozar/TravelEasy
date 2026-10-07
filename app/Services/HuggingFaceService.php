@@ -11,7 +11,7 @@ class HuggingFaceService
 
     public function generateResponse($prompt, $language = null)
     {
-        $apiKey = env('HUGGINGFACE_API_KEY');
+        $apiKey = config('services.huggingface.api_key');
     
         // Voeg context toe aan de prompt
         if ($language === 'nl') {
