@@ -26,7 +26,7 @@ Requirements: [Docker Desktop](https://www.docker.com/products/docker-desktop/) 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/NimrodLoozar/TravelEasy.git
+   git clone https://github.com/NimrodLobozar/TravelEasy.git
    cd TravelEasy
    ```
 2. Make sure an `APP_KEY` is available. Docker Compose reads it from a `.env` file in the project folder. If you don't have one yet:
@@ -76,7 +76,7 @@ docker compose down -v                                  # stop and delete all da
 ## Deploying on CasaOS with Portainer
 
 1. In Portainer, go to **Stacks → Add stack → Repository**.
-2. Repository URL: `https://github.com/NimrodLoozar/TravelEasy`, reference: `refs/heads/main`, compose path: `docker-compose.yml`.
+2. Repository URL: `https://github.com/NimrodLobozar/TravelEasy`, reference: `refs/heads/main`, compose path: `docker-compose.yml`.
 3. Under **Environment variables** add at least `APP_KEY`, `APP_URL` (e.g. `http://<casaos-ip>:8080`), `DOCKER_DB_PASSWORD` and `DOCKER_DB_ROOT_PASSWORD`. Set `APP_PORT` if port 8080 is already in use.
 4. Click **Deploy the stack**. Portainer builds the image on the server.
 
@@ -104,4 +104,4 @@ php artisan serve
 
 ## Team
 
-GitHub contributors: [NimrodLoozar](https://github.com/NimrodLoozar), [LorenzoABS](https://github.com/LorenzoABS), [Martijn339074](https://github.com/Martijn339074), [ThomasTadesse](https://github.com/ThomasTadesse)
+GitHub contributors: [NimrodLobozar](https://github.com/NimrodLobozar), [LorenzoABS](https://github.com/LorenzoABS), [Martijn339074](https://github.com/Martijn339074), [ThomasTadesse](https://github.com/ThomasTadesse)
