@@ -96,7 +96,7 @@ return new class extends Migration {
             $table->string('country');
             $table->string('airport');
             $table->boolean('is_active')->default(true);
-            $table->text('note')->nullable();
+            $table->text('note')->nullable(); 
             $table->timestamps();
         });
 
@@ -115,9 +115,9 @@ return new class extends Migration {
             $table->foreignId('departure_id')->constrained('departures')->onDelete('cascade');
             $table->foreignId('destination_id')->constrained('destinations')->onDelete('cascade');
             $table->string('flight_number');
-            $table->date('departure_date');
+            $table->date('departure_date'); // Ensure this is defined as 'date'
             $table->time('departure_time');
-            $table->date('arrival_date');
+            $table->date('arrival_date');   // Ensure this is defined as 'date'
             $table->time('arrival_time');
             $table->string('trip_status');
             $table->boolean('is_active')->default(true);
@@ -159,16 +159,17 @@ return new class extends Migration {
 
         // Conversations table
         Schema::create('conversations', function (Blueprint $table) {
-            $table->id();   
+            $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('recipient');
             $table->timestamps();
         });
 
         // Messages table
         Schema::create('messages', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('conversation_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('conversation_id')
+                ->constrained()
+                ->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->text('content');
             $table->boolean('is_read')->default(false);

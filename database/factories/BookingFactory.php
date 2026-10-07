@@ -14,8 +14,8 @@ class BookingFactory extends Factory
     public function definition()
     {
         return [
-            'customer_id' => Customer::factory(),
-            'trip_id' => Trip::factory(),
+            'customer_id' => Customer::inRandomOrder()->first()->id,
+            'trip_id' => Trip::inRandomOrder()->first()->id,
             'seat_number' => $this->faker->bothify('##?'),
             'purchase_date' => $this->faker->date,
             'purchase_time' => $this->faker->time,
@@ -23,6 +23,7 @@ class BookingFactory extends Factory
             'price' => $this->faker->randomFloat(2, 50, 1000),
             'quantity' => $this->faker->numberBetween(1, 5),
             'is_active' => $this->faker->boolean,
+            'created_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
         ];
     }
 }

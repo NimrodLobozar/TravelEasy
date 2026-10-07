@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
-use GuzzleHttp\Psr7\Message;
+use App\Models\Message;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Conversation extends Model
 {
     protected $fillable = [
-        'user_id',
-        'recipient'
+        'user_id'
     ];
 
     /**
@@ -33,9 +33,9 @@ class Conversation extends Model
     /**
      * Get the latest message in the conversation.
      */
-    public function latestMessage(): BelongsTo
+    public function latestMessage(): HasOne
     {
-        return $this->belongsTo(Message::class)->latest();
+        return $this->hasOne(Message::class)->latest();
     }
 
     /**

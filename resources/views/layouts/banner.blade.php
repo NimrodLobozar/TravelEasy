@@ -52,7 +52,8 @@
             </div>
         </div>
     </div>
-    <div
+    <x-search-layout />
+    {{-- <div
         class="absolute inset-0 mr-64 ml-64 mt-16 h-64 top-full transform -translate-y-1/2 custom-shadow rounded-b-3xl">
         <div class="flex justify-around p-6">
             <div class="w-full">
@@ -74,13 +75,20 @@
                     <div class="flex justify-around p-6">
                         <div class="w-64 mb-6">
                             <x-input-label for="from" :value="__('Van')" />
-                            <x-text-input id="from" class="block mt-1 w-full" type="text" name="from"
-                                required oninput="validateFields('flights')" />
+                            <select id="from" class="block mt-1 w-full" name="from" required
+                                oninput="validateFields('flights')">
+                                @foreach ($departures as $departure)
+                                    <option value="{{ $departure->id }}">{{ $departure->country }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="w-64 mb-6">
                             <x-input-label for="to" :value="__('Naar')" />
-                            <x-text-input id="to" class="block mt-1 w-full" type="text" name="to"
-                                required oninput="validateFields('flights')" />
+                            <select>
+                                @foreach ($destinations as $destination)
+                                    <option value="{{ $destination->id }}">{{ $destination->country }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="w-64 mb-6">
                             <x-input-label for="date" :value="__('Waneer')" />
@@ -239,5 +247,5 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> --}}
 </banner>

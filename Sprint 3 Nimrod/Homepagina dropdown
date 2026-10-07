@@ -1,0 +1,14 @@
+Procedure trips
+banner.blade.php
+SearchLayout.php
+departure.index
+DepartureController.php
+web.php
+
+-- Undifined variable $departures
+-- Procedure doesn't exists
+-- Op aparte pagina werkt de dropdown wel en de variabelen ook, alleen gekopeld met tabelen, maar met procedure niet.
+
+--- Mijn conclusie, variabelen werken niet via conponents en layouts.
+
+--- User story: Zoeken op bestemming

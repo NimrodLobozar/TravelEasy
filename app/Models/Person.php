@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Customer;
 use App\Models\User;
 use App\Models\Contact;
+use App\Models\Employee;
 
 class Person extends Model
 {
@@ -24,6 +25,11 @@ class Person extends Model
         'passport_details',
         'note',
     ];
+
+    public function employee()
+    {
+        return $this->hasOne(Employee::class);
+    }
 
     public function user()
     {

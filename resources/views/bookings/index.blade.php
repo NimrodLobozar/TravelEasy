@@ -24,6 +24,12 @@
             </div>
         @endif
 
+        @if (session('connection_error'))
+            <div class="bg-red-900 border-t-4 border-red-600 rounded-b px-4 py-3 text-red-200 mb-4" role="alert">
+                <div class="font-bold">{{ session('connection_error') }}</div>
+            </div>
+        @endif
+
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-3xl font-bold text-white">Boekingen</h1>
             <a href="{{ route('bookings.create') }}"
@@ -63,6 +69,14 @@
                     @endif
                 </div>
             </form>
+        </div>
+
+        <!-- Developer Connection Toggle (Hidden) -->
+        <div class="mb-4">
+            <div class="flex items-center">
+                <input type="checkbox" id="dev_connection" class="h-5 w-5 bg-gray-700 text-blue-600 rounded" checked>
+                <label for="dev_connection" class="ml-2 text-gray-300 font-semibold">Connectie. Alleen voor developers.</label>
+            </div>
         </div>
 
         @if($bookings->isEmpty())
@@ -105,12 +119,12 @@
                                     <a href="{{ route('bookings.edit', $booking->id) }}"
                                         class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">Bewerken</a>
                                     <form action="{{ route('bookings.destroy', $booking->id) }}" method="POST"
-                                        style="display:inline;">
+                                        class="delete-form" data-id="{{ $booking->id }}" style="display:inline;">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
-                                            class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                                            onclick="return confirm('Weet je zeker dat je deze boeking wilt verwijderen?')">Verwijderen</button>
+                                            class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded delete-button"
+                                            data-id="{{ $booking->id }}">Verwijderen</button>
                                     </form>
                                 </div>
                             </td>
@@ -141,6 +155,54 @@
             dataContainer.classList.add('hidden');
             errorContainer.classList.remove('hidden');
         }
+    });
+
+    // Handle delete buttons with connection check
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteForms = document.querySelectorAll('.delete-form');
+        const devConnection = document.getElementById('dev_connection');
+        
+        deleteForms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                // First confirm the delete action
+                if (!confirm('Weet je zeker dat je deze boeking wilt verwijderen?')) {
+                    e.preventDefault();
+                    return;
+                }
+                
+                // Then check for developer connection
+                if (!devConnection.checked) {
+                    e.preventDefault();
+                    
+                    // Create error message
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'bg-red-900 border-t-4 border-red-600 rounded-b px-4 py-3 text-red-200 mb-4';
+                    errorDiv.setAttribute('role', 'alert');
+                    
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'font-bold';
+                    errorMsg.textContent = 'Kan boeking niet verwijderen. probeer het later opnieuw.';
+                    
+                    errorDiv.appendChild(errorMsg);
+                    
+                    // Remove any existing error messages
+                    const existingErrors = document.querySelectorAll('[role="alert"]');
+                    existingErrors.forEach(el => {
+                        if (el.textContent.includes('Kan boeking niet verwijderen')) {
+                            el.remove();
+                        }
+                    });
+                    
+                    // Add error message to the top of the data container
+                    const dataContainer = document.getElementById('dataContainer');
+                    const searchForm = document.querySelector('.mb-6.bg-gray-800');
+                    dataContainer.insertBefore(errorDiv, searchForm);
+                    
+                    // Scroll to top to show the error
+                    window.scrollTo(0, 0);
+                }
+            });
+        });
     });
 </script>
 

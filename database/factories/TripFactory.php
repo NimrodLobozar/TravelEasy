@@ -15,14 +15,20 @@ class TripFactory extends Factory
     public function definition()
     {
         return [
-            'employee_id' => Employee::factory(),
-            'departure_id' => Departure::factory(),
-            'destination_id' => Destination::factory(),
+            'employee_id' => Employee::inRandomOrder()->first()->id,
+            'departure_id' => Departure::inRandomOrder()->first()->id,
+            'destination_id' => Destination::inRandomOrder()->first()->id,
             'flight_number' => strtoupper($this->faker->bothify('??###')),
-            'departure_date' => $this->faker->date,
+            // 'departure_date' => $this->faker->dateTimeBetween('now', '+1 year')->format('Y-m-d'),
             'departure_time' => $this->faker->time,
-            'arrival_date' => $this->faker->date,
-            'arrival_time' => $this->faker->time,
+            'departure_date' => $departureDate = $this->faker->dateTimeBetween('now', '+1 year')->format('Y-m-d'),
+            'arrival_date' => $this->faker->dateTimeBetween($departureDate, $departureDate . ' +1 day')->format('Y-m-d'),
+            'arrival_time' => function (array $attributes) {
+                $departureTime = new \DateTime($attributes['departure_time']);
+                $arrivalTime = clone $departureTime;
+                $arrivalTime->modify('+' . rand(1, 5) . ' hours'); // Adjust the range as needed
+                return $arrivalTime->format('H:i:s');
+            },
             'trip_status' => $this->faker->randomElement(['Scheduled', 'Completed', 'Cancelled']),
             'is_active' => $this->faker->boolean,
             'note' => $this->faker->optional()->text(100),

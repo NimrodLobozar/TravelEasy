@@ -4,142 +4,241 @@ namespace App\Http\Controllers;
 
 use App\Models\Conversation;
 use App\Models\Message;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Exception;
+use Illuminate\Support\Facades\Log;
 
 class MessageController extends Controller
 {
-    /**
-     * Get all conversations for the authenticated user
-     */
-    public function getConversations()
+    public function index()
     {
-        $conversations = Conversation::where('user_id', Auth::id())
-            ->orWhere('recipient', Auth::user()->name)
-            ->with(['messages' => function ($query) {
-                $query->latest()->first();
-            }])
-            ->latest()
-            ->get();
-
-        return response()->json([
-            'conversations' => $conversations
-        ]);
+        $user = Auth::user();
+        $conversations = Conversation::with('user', 'messages.user')->get();
+        
+        // Get conversation from URL parameter if exists
+        $conversation = null;
+        if(request()->has('conversation_id')) {
+            $conversation = Conversation::with('messages.user')
+                ->find(request('conversation_id'));
+        }
+    
+        return view('messages.index', compact('conversations', 'conversation'));
     }
 
-    /**
-     * Get a specific conversation with all messages
-     */
-    public function getConversation($id)
+    public function create()
     {
-        $conversation = Conversation::with(['messages' => function ($query) {
-            $query->with('user')->orderBy('created_at', 'asc');
-        }])->findOrFail($id);
-
-        // Mark all unread messages as read
-        Message::where('conversation_id', $id)
-            ->where('user_id', '!=', Auth::id())
-            ->where('is_read', false)
-            ->update(['is_read' => true]);
-
-        return response()->json([
-            'conversation' => $conversation
-        ]);
+        return view('messages.create');
     }
 
-    /**
-     * Start a new conversation or get existing one
-     */
-    public function startConversation(Request $request)
+    public function store(Request $request)
     {
         $request->validate([
-            'recipient' => 'required|exists:users,name'
+            'content' => 'required|string|max:255',
         ]);
 
-        // Check if conversation already exists
-        $conversation = Conversation::where(function ($query) use ($request) {
-            $query->where('user_id', Auth::id())
-                ->where('recipient', $request->recipient);
-        })->orWhere(function ($query) use ($request) {
-            $query->where('user_id', User::where('name', $request->recipient)->first()->id)
-                ->where('recipient', Auth::user()->name);
-        })->first();
+        if (strlen($request->content) > 25) {
+            return redirect()->back()->with('error', 'Bericht kan niet worden verzonden omdat het te lang is.');
+        }
 
-        if (!$conversation) {
+        try {
+            // Replace firstOrCreate with create to always make a new conversation
+            $conversation = Conversation::create(['user_id' => Auth::id()]);
+
+            Message::create([
+                'conversation_id' => $conversation->id,
+                'user_id' => Auth::id(),
+                'content' => $request->content,
+            ]);
+
+            return redirect()->route('messages.index', ['conversation_id' => $conversation->id])
+                ->with('success', 'Nieuw gesprek succesvol gestart!');
+        } catch (Exception $e) {
+            Log::error('Failed to create message: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Het bericht kon niet worden verzonden. Probeer het later opnieuw.')
+                ->withInput();
+        }
+    }
+
+    public function reply(Request $request, Conversation $conversation)
+    {
+        $request->validate([
+            'content' => 'required|string|max:255',
+        ]);
+
+        $maxLength = 25; // Set your desired maximum length here
+
+        if (strlen($request->content) > $maxLength) {
+            return redirect()->back()->with('error', 'Bericht kan niet worden verzonden omdat het te lang is.');
+        }
+
+        // Check if we should simulate an error
+        if ($request->has('simulate_error')) {
+            // Simulate a server error for testing
+            Log::info('Simulating server error for message reply');
+            return redirect()->back()
+                ->with('error', 'Het bericht kon niet worden verzonden. Probeer het later opnieuw.')
+                ->withInput();
+        }
+
+        try {
+            Message::create([
+                'conversation_id' => $conversation->id,
+                'user_id' => Auth::id(),
+                'content' => $request->content,
+            ]);
+
+            return redirect()->back()->with('success', 'Antwoord succesvol verzonden!');
+        } catch (Exception $e) {
+            // Log the error
+            Log::error('Failed to reply to conversation: ' . $e->getMessage());
+
+            // Return with server error message
+            return redirect()->back()
+                ->with('error', 'Het bericht kon niet worden verzonden. Probeer het later opnieuw.')
+                ->withInput();
+        }
+    }
+
+    public function markAsRead(Message $message)
+    {
+        try {
+            $message->is_read = true;
+            $message->save();
+
+            return redirect()->route('messages.index');
+        } catch (Exception $e) {
+            Log::error('Failed to mark message as read: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Het bericht kon niet worden gemarkeerd als gelezen. Probeer het later opnieuw.');
+        }
+    }
+
+    public function createConversation(Request $request)
+    {
+        // Check if we should simulate an error
+        if ($request->has('simulate_error')) {
+            // Simulate a server error for testing
+            Log::info('Simulating server error for conversation creation');
+            return redirect()->back()
+                ->with('error', 'Het gesprek kon niet worden aangemaakt. Probeer het later opnieuw.');
+        }
+
+        try {
+            // Create a new conversation
             $conversation = Conversation::create([
                 'user_id' => Auth::id(),
-                'recipient' => $request->recipient
             ]);
-        }
 
-        return response()->json([
-            'conversation' => $conversation
-        ]);
+            return redirect()->route('dashboard', ['conversation_id' => $conversation->id])
+                ->with('success', 'Nieuw gesprek succesvol aangemaakt!');
+        } catch (Exception $e) {
+            Log::error('Failed to create conversation: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Het gesprek kon niet worden aangemaakt. Probeer het later opnieuw.');
+        }
     }
 
-    /**
-     * Send a message in a conversation
-     */
-    public function sendMessage(Request $request, $conversationId)
+    public function update(Request $request, Conversation $conversation)
     {
         $request->validate([
-            'content' => 'required|string'
+            'content' => 'required|string|max:255',
         ]);
 
-        $conversation = Conversation::findOrFail($conversationId);
+        $maxLength = 25; // Set your desired maximum length here
 
-        // Verify user is part of the conversation
-        if ($conversation->user_id !== Auth::id() && $conversation->recipient !== Auth::user()->name) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+        if (strlen($request->content) > $maxLength) {
+            return redirect()->back()->with('error', 'Bericht kan niet worden bijgewerkt omdat het te lang is.');
         }
 
-        $message = Message::create([
-            'conversation_id' => $conversationId,
-            'user_id' => Auth::id(),
-            'content' => $request->content,
-            'is_read' => false
-        ]);
-
-        return response()->json([
-            'message' => $message->load('user')
-        ]);
-    }
-
-    /**
-     * Get unread messages count
-     */
-    public function getUnreadCount()
-    {
-        $count = Message::whereHas('conversation', function ($query) {
-            $query->where('user_id', Auth::id())
-                ->orWhere('recipient', Auth::user()->name);
-        })
-        ->where('user_id', '!=', Auth::id())
-        ->where('is_read', false)
-        ->count();
-
-        return response()->json([
-            'unread_count' => $count
-        ]);
-    }
-
-    /**
-     * Delete a conversation
-     */
-    public function deleteConversation($id)
-    {
-        $conversation = Conversation::findOrFail($id);
-
-        // Verify user is part of the conversation
-        if ($conversation->user_id !== Auth::id() && $conversation->recipient !== Auth::user()->name) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+        // Check if we should simulate an error
+        if ($request->has('simulate_error')) {
+            // Simulate a server error for testing
+            Log::info('Simulating server error for message update');
+            return redirect()->back()
+                ->with('error', 'Het bericht kon niet worden bijgewerkt. Probeer het later opnieuw.')
+                ->withInput();
         }
 
-        $conversation->delete();
+        try {
+            $lastMessage = $conversation->messages()->where('user_id', Auth::id())->latest()->first();
+            if ($lastMessage) {
+                $lastMessage->content = $request->content;
+                $lastMessage->save();
+            }
 
-        return response()->json([
-            'message' => 'Conversation deleted successfully'
+            return redirect()->back()->with('success', 'Bericht succesvol bijgewerkt!');
+        } catch (Exception $e) {
+            Log::error('Failed to update message: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Het bericht kon niet worden bijgewerkt. Probeer het later opnieuw.')
+                ->withInput();
+        }
+    }
+
+    public function deleteLastMessage(Request $request, Conversation $conversation)
+    {
+        try {
+            $lastMessage = $conversation->messages()
+                ->where('user_id', Auth::id())
+                ->latest()
+                ->first();
+    
+            if ($lastMessage) {
+                $lastMessage->delete();
+                return redirect()->route('messages.index', ['conversation_id' => $conversation->id])
+                    ->with('success', 'Laatste bericht succesvol verwijderd!');
+            }
+    
+            return redirect()->back()
+                ->with('error', 'Geen berichten gevonden om te verwijderen.');
+    
+        } catch (Exception $e) {
+            Log::error('Failed to delete last message: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Het bericht kon niet worden verwijderd. Probeer het later opnieuw.');
+        }
+    }
+
+    public function destroy(Conversation $conversation)
+    {
+        try {
+            // Delete all messages first to avoid foreign key constraints
+            $conversation->messages()->delete();
+            $conversation->delete();
+    
+            return redirect()->route('messages.index')
+                ->with('success', 'Gesprek succesvol verwijderd!');
+        } catch (Exception $e) {
+            Log::error('Failed to delete conversation: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Het gesprek kon niet worden verwijderd. Probeer het later opnieuw.');
+        }
+    }
+
+    public function deleteSelected(Request $request)
+    {
+        $request->validate([
+            'message_ids' => 'required|array',
+            'message_ids.*' => 'exists:messages,id',
         ]);
+
+        // Check if we should simulate an error
+        if ($request->has('simulate_error')) {
+            // Simulate a server error for testing
+            Log::info('Simulating server error for delete selected messages');
+            return redirect()->back()
+                ->with('error', 'De geselecteerde berichten konden niet worden verwijderd. Probeer het later opnieuw.');
+        }
+
+        try {
+            Message::whereIn('id', $request->message_ids)->delete();
+
+            return redirect()->route('messages.index')->with('success', 'Geselecteerde berichten succesvol verwijderd!');
+        } catch (Exception $e) {
+            Log::error('Failed to delete selected messages: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'De geselecteerde berichten konden niet worden verwijderd. Probeer het later opnieuw.');
+        }
     }
 }

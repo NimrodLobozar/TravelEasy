@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use Faker\Factory as Faker;
 
 class RegisteredUserController extends Controller
 {
@@ -53,14 +54,17 @@ class RegisteredUserController extends Controller
             'person_id' => $person->id,
         ]);
 
+        $faker = Faker::create();
+
         $customer = Customer::create([
             'person_id' => $person->id,
-            'relation_number' => 'REL' . str_pad(Customer::max('id') + 1, 8, '0', STR_PAD_LEFT),
+            'relation_number' => $faker->unique()->numberBetween(100000, 999999),
         ]);
 
         Contact::create([
             'customer_id' => $customer->id,
             'email' => $request->email,
+            'mobile' => $request->mobile,
             'is_active' => true,
             // ...other required fields for Contact model...
         ]);

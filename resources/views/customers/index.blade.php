@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-semibold text-xl text-gray-200 leading-tight">
             {{ __('Customer Overview') }}
         </h2>
         <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4">
@@ -21,12 +21,20 @@
                 <button id="searchButton"
                     class="bg-blue-600 text-white px-5 py-2.5 rounded-r-lg transition duration-300 hover:bg-green-700 transform hover:scale-105 -ml-1">Search</button>
             </div>
+
+            <a href="{{ route('customers.create') }}"
+                class="bg-green-600 text-white px-5 py-2.5 rounded-lg transition duration-300 hover:bg-green-700 transform hover:scale-105">
+                Add New Customer
+            </a>
         </div>
     </x-slot>
 
     <div id="dataContainer" class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
+            <div class="mt-4">
+                {{ $customers->links() }}
+            </div>
+            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg mt-4">
                 <table class="min-w-full divide-y divide-gray-200 hidden md:table">
                     <thead>
                         <tr>

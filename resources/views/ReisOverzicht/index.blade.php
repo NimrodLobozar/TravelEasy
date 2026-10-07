@@ -26,6 +26,11 @@
                 <!-- Reis List -->
                 <div class="w-full overflow-x-auto">
                     <div class="bg-white shadow-lg rounded-lg my-6">
+                        @if (session('success'))
+                            <div class="bg-green-100 border-t-4 border-green-600 rounded-b px-4 py-3 text-green-700" role="alert">
+                                {{ session('success') }}
+                            </div>
+                        @endif
                         @if ($reizen->count() > 0)
                             <table class="min-w-full table-auto">
                                 <thead>
@@ -39,8 +44,8 @@
                                 <tbody class="text-gray-800 text-sm font-light">
                                     @foreach ($reizen as $reis)
                                         <tr class="border-b border-gray-200 hover:bg-gray-50">
-                                            <td class="py-3 px-6 text-left whitespace-nowrap font-medium">{{ $reis->country }}</td>
-                                            <td class="py-3 px-6 text-left">{{ $reis->airport }}</td>
+                                            <td class="py-3 px-6 text-left whitespace-nowrap font-medium">{{ $reis->departure->country ?? 'N/A' }}</td>
+                                            <td class="py-3 px-6 text-left">{{ $reis->departure->airport ?? 'N/A' }}</td>
                                             <td class="py-3 px-6 text-left">
                                                 @if($reis->is_active)
                                                     <span class="bg-green-400 text-white py-1 px-3 rounded-full text-xs font-medium">Actief</span>
@@ -50,12 +55,12 @@
                                             </td>
                                             <td class="py-3 px-6 text-center">
                                                 <!-- Acties -->
-                                                <a href="{{ route('reisoverzicht.show', $reis->id) }}" class="text-blue-500 hover:text-blue-700">Bekijk</a>
-                                                <a href="{{ route('reisoverzicht.edit', $reis->id) }}" class="text-yellow-500 hover:text-yellow-700 ml-2">Bewerk</a>
-                                                <form action="{{ route('reisoverzicht.destroy', $reis->id) }}" method="POST" class="inline-block ml-2">
+                                                <a href="{{ route('reisoverzicht.show', $reis->id) }}" class="text-blue-500 hover:text-blue-700">ⓘ</a>
+                                                <a href="{{ route('reisoverzicht.edit', $reis->id) }}" class="text-yellow-500 hover:text-yellow-700 ml-2">✎</a>
+                                                <form action="{{ route('reisoverzicht.destroy', $reis->id) }}" method="POST" class="inline-block ml-2" onsubmit="return customConfirm(event, this);">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="text-red-500 hover:text-red-700">Verwijder</button>
+                                                    <button type="submit" class="text-red-500 hover:text-red-700">🗑️</button>
                                                 </form>
                                             </td>
                                         </tr>
@@ -66,6 +71,7 @@
                             <p class="text-red-500 p-4">Geen reizen gevonden.</p>
                         @endif
                     </div>
+  
                 </div>
             </div>
         </div>
@@ -88,6 +94,22 @@
             errorContainer.classList.remove('hidden');
         }
     });
+
+    function customConfirm(event, form) {
+        event.preventDefault();
+        const message = 'Weet je zeker dat je deze reis wilt verwijderen?';
+        const confirmation = confirm(message);
+
+        if (confirmation) {
+            const unhappy = confirm('Klik op OK voor verwijderen of Annuleren voor Unhappy.');
+            if (unhappy) {
+                form.submit();
+            } else {
+                alert('Internet fout, probeer het later opnieuw');
+            }
+        }
+        return false;
+    }
 </script>
 
 <style>
