@@ -8,13 +8,20 @@ use Illuminate\Support\Facades\DB;
 
 class TripController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $trips = DB::select('CALL GetTripDetails()') ?? [];
-        $departures = DB::select('CALL GetTripDetails()') ?? [];
-        $destinations = DB::select('CALL GetTripDetails()') ?? [];
+        $departureCountry = $request->query('from');
+        $destinationCountry = $request->query('to');
 
-        return view('trips.index');
+        $query = DB::table('trips')
+            ->join('departures', 'trips.departure_id', '=', 'departures.id')
+            ->join('destinations', 'trips.destination_id', '=', 'destinations.id')
+            ->where('departures.country', $departureCountry)
+            ->where('destinations.country', $destinationCountry);
+
+        $trips = $query->select('trips.*', 'departures.country as departure_country', 'destinations.country as destination_country')->get();
+
+        return view('trips.index', compact('trips'));
     }
 
     public function create()

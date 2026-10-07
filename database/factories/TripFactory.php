@@ -14,22 +14,40 @@ class TripFactory extends Factory
 
     public function definition()
     {
+        $departure = Departure::inRandomOrder()->first();
+        $destination = Destination::where('country', '!=', $departure->country)->inRandomOrder()->first();
+
+        $departureDate = $this->faker->dateTimeBetween('now', '+1 month')->format('Y-m-d');
+        $arrivalDate = $this->faker->dateTimeBetween($departureDate, $departureDate . ' +1 day')->format('Y-m-d');
+
+        $tripStatus = $this->faker->randomElement(
+            array_merge(
+                array_fill(0, 80, 'Scheduled'),
+                array_fill(0, 15, 'Completed'),
+                array_fill(0, 5, 'Cancelled')
+            )
+        );
+
+        if ($tripStatus === 'Completed') {
+            $departureDate = $this->faker->dateTimeBetween('-1 year', 'now')->format('Y-m-d');
+            $arrivalDate = $this->faker->dateTimeBetween($departureDate, $departureDate . ' +1 day')->format('Y-m-d');
+        }
+
         return [
             'employee_id' => Employee::inRandomOrder()->first()->id,
-            'departure_id' => Departure::inRandomOrder()->first()->id,
-            'destination_id' => Destination::inRandomOrder()->first()->id,
+            'departure_id' => $departure->id,
+            'destination_id' => $destination->id,
             'flight_number' => strtoupper($this->faker->bothify('??###')),
-            // 'departure_date' => $this->faker->dateTimeBetween('now', '+1 year')->format('Y-m-d'),
             'departure_time' => $this->faker->time,
-            'departure_date' => $departureDate = $this->faker->dateTimeBetween('now', '+1 year')->format('Y-m-d'),
-            'arrival_date' => $this->faker->dateTimeBetween($departureDate, $departureDate . ' +1 day')->format('Y-m-d'),
+            'departure_date' => $departureDate,
+            'arrival_date' => $arrivalDate,
             'arrival_time' => function (array $attributes) {
                 $departureTime = new \DateTime($attributes['departure_time']);
                 $arrivalTime = clone $departureTime;
                 $arrivalTime->modify('+' . rand(1, 5) . ' hours'); // Adjust the range as needed
                 return $arrivalTime->format('H:i:s');
             },
-            'trip_status' => $this->faker->randomElement(['Scheduled', 'Completed', 'Cancelled']),
+            'trip_status' => $tripStatus,
             'is_active' => $this->faker->boolean,
             'note' => $this->faker->optional()->text(100),
         ];

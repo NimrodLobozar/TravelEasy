@@ -14,7 +14,7 @@ class RoleFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'name' => $this->faker->randomElement(['Admin', 'Editor', 'Viewer']),
+            'role' => $this->faker->randomElement(['Admin', 'Editor', 'Viewer']),
             'is_active' => $this->faker->boolean,
             'note' => $this->faker->optional()->text(100),
         ];

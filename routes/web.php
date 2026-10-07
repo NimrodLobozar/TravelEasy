@@ -10,6 +10,9 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ReizenOverzichtController;
 use App\Http\Controllers\DepartureController;
+use App\Http\Controllers\DestinationController;
+use App\Http\Controllers\TripController;
+use App\Http\Controllers\OfferController;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -56,6 +59,13 @@ Route::get('/dashboard', function () {
 Route::get('/underdevelopment', function () {
     return view('underdevelopment');
 })->name('underdevelopment');
+
+Route::get('/api/destinations', [DestinationController::class, 'getDestinationsByDeparture']);
+Route::get('/api/available-dates', [DestinationController::class, 'getAvailableDates']);
+
+Route::get('/trips', [TripController::class, 'index'])->name('trips.index');
+
+Route::get('/aanbiedingen', [OfferController::class, 'index'])->name('aanbiedingen');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

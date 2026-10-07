@@ -59,7 +59,7 @@ class EmployeeFactory extends Factory
 
         Role::factory()->create([
             'user_id' => $user->id,
-            'name' => in_array($employee['employee_type'], ['Manager', 'Administrator']) ? 'Admin' : 'Editor',
+            'role' => in_array($employee['employee_type'], ['Manager', 'Administrator']) ? 'Admin' : 'Editor',
             'is_active' => $employee['is_active'],
             'note' => $employee['note'],
         ]);

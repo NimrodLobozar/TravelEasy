@@ -13,7 +13,7 @@
                         {{ __('Dashboard') }}
                     </x-nav-link>
                     @auth
-                        @if (Auth::user()->roles && Auth::user()->roles->pluck('name')->contains('Admin'))
+                        @if (Auth::user()->roles && Auth::user()->roles->pluck('role')->contains('Admin'))
                             <x-nav-link :href="route('invoice.index')" :active="request()->routeIs('invoice.index')">
                                 {{ __('Factuuren') }}
                             </x-nav-link>

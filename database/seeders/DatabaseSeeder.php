@@ -17,6 +17,7 @@ use App\Models\Trip;
 use App\Models\Booking;
 use App\Models\Communication;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Offer;
 
 class DatabaseSeeder extends Seeder
 {
@@ -76,7 +77,7 @@ class DatabaseSeeder extends Seeder
 
         $adminRole = Role::create([
             'user_id' => $adminUser->id,
-            'name' => 'Admin',
+            'role' => 'Admin',
         ]);
 
         // Associate the role with the user
@@ -95,11 +96,14 @@ class DatabaseSeeder extends Seeder
         $employees = Employee::factory()->count(10)->create();
 
         // Luchthavens en bestemmingen
-        $departures = Departure::factory()->count(20)->create();
-        $destinations = Destination::factory()->count(20)->create();
+        $departures = Departure::factory()->count(38)->create();
+        $destinations = Destination::factory()->count(38)->create();
 
         // Reizen genereren (gekoppeld aan medewerkers, luchthavens)
-        $trips = Trip::factory()->count(500)->create();
+        $trips = Trip::factory()->count(100)->create();
+
+        // Offers
+        Offer::factory()->count(10)->create();
 
         // Boekingen (gekoppeld aan klanten en reizen)
         $bookings = Booking::factory()->count(20)->create();

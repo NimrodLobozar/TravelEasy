@@ -126,10 +126,10 @@
             <div class="mt-4">
                 {{ $customers->links() }}
             </div>
+            <div id="errorContainer" class="py-12 hidden ml-64">
+                <p class="text-red-500">Geen klanten gevonden. Probeer later opnieuw.</p>
+            </div>
         </div>
-    </div>
-    <div id="errorContainer" class="py-12 hidden ml-64">
-        <p class="text-red-500">Geen klanten gevonden. Probeer later opnieuw.</p>
     </div>
 </x-app-layout>
 <script>
